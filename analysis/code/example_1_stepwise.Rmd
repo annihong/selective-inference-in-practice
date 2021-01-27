@@ -1,0 +1,265 @@
+---
+title: "Example 1"
+author: "Anni Hong"
+date: "12/30/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = F, message = F, fig.align='center',fig.pos = 'h')
+source("./helpers.r")
+```
+
+```{r, include=FALSE}
+library(haven)
+library(tidyverse) 
+library(haven) 
+library(labelled) 
+library(janitor) 
+library(broom) 
+library(caret) 
+library(Hmisc)
+library(rms)
+library(sandwich)
+theme_set(theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()))
+```
+## Example 1, model selection using stepwise regression based on p-values:  
+## Textbook:
+**Probability and Statistics for Engineers and Scientists (4 edition) Anthony Hayter**
+"Model fitting is performed by finding which subset of the k input variables is required to model the dependent variable y in the best and most succinct manner. The final model that the experimenter uses for inference problems should consist of input variables that each have p-values no larger than 10%, because otherwise some variables should be taken out of the model to simplify it. An important warning when fitting the model is that it is best to remove only one variable from the model at a time. This is because when one variable is removed from the model and the subsequent reduced model is fitted, the p-values of the remaining input variables in the model usually change."    
+
+"Typically, model fitting may be performed in the following manner. **First, an experimenter starts by fitting all k input variables. If all variables are needed in the model, then no reduction is necessary. If one or more input variables has a p-value larger than 10%, the variable with the largest p-value (smallest absolute value of the t-statistic) is removed. The reduced model with k -1 input variables is then fitted, and the process is repeated."**
+
+Hayter directly recommended using stepwise regression to select the best model and then conduct statistical inference on the selected model in *Probability and Statistics for Engineers and Scientists*. In the following paper, we first permute all the rows of the dataset while keeping the outcome variables fixed thus remove any association between the covariates and the outcomes. Then we follow the model fitting procedure outlined in the paper in this shuffled dataset and demonstrate that statistically significant results can be found on this null dataset. Since the exact procedure is not given in the paper, we adhered to the recommendation of the textbook when ambiguity arose.         
+
+On Dec.16th 2020, Science Daily published an article [Three pillars of mental health: Good sleep, exercise, raw fruits and veggies](https://www.sciencedaily.com/releases/2020/12/201216094647.htm) summarizing a research conducted by the University of Otago study, claiming that getting good quality sleep, exercising, and eating more raw fruits and vegetables predicts better mental health and well-being in young adults. The research paper titled [The Big Three Health Behaviors and Mental Health and Well-Being Among Young Adults: A Cross-Sectional Investigation of Sleep, Exercise, and Diet](https://www.frontiersin.org/articles/10.3389/fpsyg.2020.579205/full#h3) was published in *Frontiers in Psychology*.  The following sections follows the procedure described in the *Data Preparation and Analyses* section of the paper.   
+
+0. The dataset was read in and processed the same way as the paper detailed in the supplementary material section. And then permuted to break the association between covariates and the outcome variables of interests.   
+
+```{r step-0 data process, include=FALSE}
+data_shay  <- read_sav("../data/raw/2018-2019_Lifestyle_of_Young_Adults_Survey.sav")
+data_shay_pre1 <- data_shay %>% clean_names() %>% filter(included == 1)
+
+data_shay_pre2 <- data_shay_pre1 %>%
+  rename(ethnicity_cat = ethnicity_cat_top6) %>%
+  select(age_c, gender, ethnicity_cat, sample, unemployed, ses_c, bmi_c, condition, allergy, vegetarian, alcohol_daily_c, medmood, vitsup, regsmoke, sleep_quantity_c = sleeep_quantity_c, sleep_quality_c = sleeep_quality_c, raw_fv_c, activity_c, cooked_fv_c, fastfood_daily_c, sweets_daily_c, soda_daily_c, flourishing_c, cesd_c, educ) %>%
+  mutate_at(vars(gender, ethnicity_cat, unemployed, condition, allergy, vegetarian, medmood), ~ to_factor(.x)) %>%
+  mutate_at(vars(sample, regsmoke), ~ factor(.x)) %>%
+  mutate(ethnicity_cat = fct_other(ethnicity_cat, keep = c('Asian', 'Black', 'Hispanic', 'Caucasian')) %>%
+           relevel(., ref = 'Caucasian'))
+data_shay_pre2[,c("gender", "allergy", "vegetarian", "condition")] <- as.data.frame(lapply(data_shay_pre2[,c("gender", "allergy", "vegetarian", "condition")], function (x) gsub(" ", "",x)))
+#data_shay_pre2 <- as.data.frame(lapply(data_shay_pre2, as.numeric))
+
+```
+
+```{r predictors shuffle row-wise}
+outcomes <- c("flourishing_c", "cesd_c")
+
+predictors <- c("sleep_quantity_c", "sleep_quality_c", "activity_c", "raw_fv_c", "cooked_fv_c", "fastfood_daily_c", "sweets_daily_c", "soda_daily_c")
+
+covariates <- c("age_c", "gender", "ethnicity_cat", "sample", "unemployed", "ses_c", "bmi_c", "condition", "medmood", "vitsup", "allergy", "vegetarian", "alcohol_daily_c", "regsmoke")
+
+set.seed(123)
+shuffled <- shuffle(data_shay_pre2, outcomes)
+
+shuffled_full <- generate_full_model_dat(shuffled, base_var = covariates, add_var = predictors, outcomes = outcomes)
+```
+1. "[demographic] covariates were included in the model if they correlated with either the predictors and/or the outcome measures." 
+
+```{r step-1 selecting covariates correlated to predictor and/or outcomes}
+
+res2<-rcorr(as.matrix(as.data.frame(lapply(shuffled, as.numeric))))
+corr_significant <- as.data.frame(res2[["P"]][covariates,c(predictors,outcomes)])
+
+covariates_kept <- corr_significant %>%
+  select_all() %>%
+  filter_all(any_vars(.<= 0.05)) %>% rownames()
+
+fit <- lm(as.formula(paste0('cesd_c ~ - flourishing_c +', paste(covariates_kept, collapse = ' + '))), data=shuffled)
+
+covariates_kept_factorized <- names(fit$coefficients)[-1]
+
+model_1_flo <- get_result(shuffled_full, outcomes[1], covariates_kept_factorized, outcomes[2])
+model_1_dep <-get_result(shuffled_full, outcomes[2], covariates_kept_factorized, outcomes[1])
+```
+As the above table has shown, all the demographic covariates correlate with at least one predictor of interest or the outcome variable of interest. Thus all will be kept in the model. Those selected covariates will be used for Model 1 in the paper.   
+
+2. "Quadratic factors for the sleep, activity, and diet variables were included to test for any non-linear associations with the outcomes and were retained only when significant.
+
+- It is unclear if all quadratic terms thrown in all at once or through a stepwise procedure. We will use a forward stepwise regression that starts with all the demographic covariates and the health behaviors (sleep_quantity_c, sleep_quality_c, activity_c, raw_fv_c, cooked_fv_c, fastfood_daily_c, sweets_daily_c, soda_daily_c) and end with the starting model plus all the quadratic health behavior terms.   
+
+ref for 0.05 significant level when doing stepwise: https://stats.stackexchange.com/questions/97257/stepwise-regression-in-r-critical-p-value
+
+```{r step-2 use stepwise to select significant quadratic predictors}
+quad_selector <- selector_factory()
+kept_flo_2 <- quad_selector(shuffled_full, base_var = covariates_kept, add_var = predictors, outcome = outcomes[1], remove = outcomes[2])
+
+kept_dep_2 <- quad_selector(shuffled_full, base_var = covariates_kept, add_var = predictors, outcome = outcomes[2], remove = outcomes[1])
+
+model_2_flo <- get_result(shuffled_full, outcomes[1], kept_flo_2, outcomes[2])
+model_2_dep <-get_result(shuffled_full, outcomes[2], kept_dep_2, outcomes[1])
+```
+**model 3 added the significant two-way interaction terms among the health behaviors while keeping significant terms from step 2 in the model.**
+```{r step-3 use stepwise to select significant two-way interactions among predictors}
+int_selector <- selector_factory(expander = generate_interaction_terms)
+kept_flo_3 <- int_selector(shuffled_full, base_var = kept_flo_2, add_var = predictors, outcome = outcomes[1], remove = outcomes[2])
+
+kept_dep_3 <- int_selector(shuffled_full, base_var = kept_dep_2, add_var = predictors, outcome = outcomes[2], remove = outcomes[1])
+
+model_3_flo <- get_result(shuffled_full, outcomes[1], kept_flo_3, outcomes[2])
+model_3_dep <-get_result(shuffled_full, outcomes[2], kept_dep_3, outcomes[1])
+```
+
+Through the model selection process described in the research, we discovered many "significant" predictors in the shuffled dataset where no association should be found. Additionally, the p-values for significance were not adjusted for multiple testing thus further invalidate the inference.  
+
+## remedy for post selection inference  
+Aware of the replication crisis in Psychology, the researchers write, 
+"We also used 10-fold cross-validation to determine whether any interaction terms would be useful for predicting out-of-sample, above and beyond the no-interaction model. Cross-validation involves splitting data into several subsets or “folds” and then repeatedly fitting the model to all but one fold and testing the model on the leftover fold (Koul et al., 2018)."    
+Through their cross-validation procedure, the researchers concluded that none of the interaction terms they included in the model helps with out-of-sample prediction. 
+
+However, they did not subject the chosen quadratic terms to the same procedure. Moreover, the cross-validation was done on the *same* dataset that the 2-way interaction terms were chosen thus the cv errors are biased estimates of the true test error. The following section demonstrates a remedy for the model selection procedure used in the paper through sample splitting.  
+
+1. The dataset is splitted into training (n = 800) and testing(n = 311) sets.
+```{r remedy for model selection }
+split <- sample_splitting(shuffled_full, 0.8)
+shuffled_train <- split[[1]]
+shuffled_test <- split[[2]]
+```
+
+
+step 2 was also repeated on the training set, slightly different quadratic terms were selected.
+```{r, echo=F}
+quad_selector <- selector_factory()
+kept_flo_2 <- quad_selector(shuffled_train, base_var = covariates, add_var = predictors, outcome = outcomes[1], remove = outcomes[2])
+
+kept_dep_2 <- quad_selector(shuffled_train, base_var = covariates, add_var = predictors, outcome = outcomes[2], remove = outcomes[1])
+
+model_2_flo <- get_result(shuffled_train, outcomes[1], kept_flo_2, outcomes[2])
+model_2_dep <-get_result(shuffled_train, outcomes[2], kept_dep_2, outcomes[1])
+```
+
+Now we extract the set of selected variables from the above procedure and run the same model on the testing set which remained untouched in the selection process. As expected, the significant quadratic terms ceased to be significant.    
+```{r, echo=F}
+model_2_flo_test <- get_result(shuffled_test, outcomes[1], kept_flo_2, outcomes[2])
+model_2_dep_test <-get_result(shuffled_test, outcomes[2], kept_dep_2, outcomes[1])
+```
+
+```{r shuffled_data_train_vs_test, results="asis"}
+library(stargazer)
+stargazer(model_2_dep, model_2_dep_test, type = "html",  title = "Predicting Depressive Symptoms: null data", column.labels = c("train", "test"), dep.var.labels = c("depression", "depression"))
+stargazer(model_2_flo, model_2_flo_test, type = "html", title = "Predicting Flourishing: null data", column.labels = c("train", "test"), dep.var.labels = c("flourishing", "flourishing"))
+```
+
+```{r repeat the above process through bootstrap sampling}
+#only setting quadratic terms
+bootstrap_process <- function(data, B, outcome_idx, to_shuffle = T, m=nrow(data)) {
+  train_res <- list()
+  test_res <- list()
+  remove_idx <- setdiff(c(1,2),outcome_idx)
+  data <- generate_full_model_dat(data, covariates, predictors, outcomes)
+  for (i in 1:B) {
+    # #1. bootstrap
+    # dat <- bootstrap_sample(data, m)
+    # #2. shuffle
+    # if (to_shuffle) {
+    #   dat <- shuffle(dat, outcomes)
+    # }
+    
+    # step 1 and 2 combined:
+    dat <- cbind(bootstrap_sample(data[,-which(names(data) %in% outcomes)], m), bootstrap_sample(data[,outcomes], m))
+    
+    #3. sample_splitting
+    split <- sample_splitting(dat)
+    train <- split[[1]]
+    test <- split[[2]]
+    
+    selector <- selector_factory(expander = generate_quad_terms)
+    train_kept <- selector(train, base_var = covariates, add_var = predictors, outcome = outcomes[outcome_idx], remove = outcomes[remove_idx])
+    
+    fit_train <- get_result(train, outcomes[outcome_idx], train_kept, outcomes[remove_idx])
+    # print(summary(fit_train))
+    fit_test <- get_result(test, outcomes[outcome_idx], train_kept, outcomes[remove_idx])
+    # print(summary(fit_test))
+    train_res[[i]] <- fit_train
+    test_res[[i]] <- fit_test
+  }
+  return(list(train_res, test_res))
+}
+
+
+```
+
+```{r effect as m increase}
+train_prop <- c()
+test_prop <- c()
+train_prop_sandwich <- c()
+test_prop_sandwich <- c()
+sample_size_seq <- seq(from=1000,to=2000, by=200)
+for (size in sample_size_seq){
+  r <- bootstrap_process(data=data_shay_pre2, B=200, outcome_idx=2, m=size)
+  train_res <- r[[1]]
+  test_res <- r[[2]]
+  
+  #lm variance
+  train_sig <- purrr::map(train_res,get_num_sig_quad_term,robust=F)
+  test_sig <- purrr::map(test_res,get_num_sig_quad_term,robust=F)
+  train_prop <- c(train_prop, mean(train_sig > 0))
+  test_prop <- c(test_prop, mean(test_sig > 0))
+  
+  #robust variance
+  train_sig_sandwich <- purrr::map(train_res,get_num_sig_quad_term,robust=T)
+  test_sig_sandwich <- purrr::map(test_res,get_num_sig_quad_term,robust=T)
+  train_prop_sandwich <- c(train_prop_sandwich, mean(train_sig_sandwich > 0))
+  test_prop_sandwich <- c(test_prop_sandwich, mean(test_sig_sandwich > 0))
+}
+
+```
+
+```{r test vs train fdr plot}
+#par(mfcol=c(2,1))
+plot(sample_size_seq, test_prop, type = "l", col="blue", ylim = c(0,1), ylab = "P(at least 1 sig quad term under global null) ", main = "FDR for post selection inference, conv variance vs robust variance")
+lines(sample_size_seq,train_prop, col="red")
+lines(sample_size_seq,test_prop_sandwich, col="skyblue")
+lines(sample_size_seq,train_prop_sandwich, col="pink")
+legend("topleft", legend=c("train conv", "test conv", "train robust", "test robust"),col=c("red", "blue", "pink", "skyblue"), lty=1:1, cex=0.8)
+```
+As expected, the false discovery proportion is much higher in the training set where the quadratic terms were selected on. However, the false discovery proportion is also high when the significance level was determined by the robust variance instead the conventional linear model variance. The following diagnostic plots elucidate the reason behind such phenomenon.    
+```{r checking linear assumption}
+par(mfcol=c(2,2))
+plot(train_res[[sample(length(train_res),1)]])
+plot(test_res[[sample(length(test_res),1)]])
+```
+The residual has lower variance at more extreme values of of the fitted values, but larger variance closer to the average of the fitted values. This type of heteroskedasticity causes the conventional standard error to bias downward. 
+> The [attached note](http://econ.lse.ac.uk/staff/spischke/mhe/josh/Notes%20on%20conv%20std%20error.pdf) describes the mechanics, and gives conditions  for the direction of the bias.  Basically, conventional standard errors are too big whenever covariate values far from the mean of the covariate distribution are associated with lower variance residuals (so small residuals for small and big values of x, and large residuals in the middle of the x range).  We think this is empirically not the common case but it might happen.  The leading case is probably that residual variance goes up with the value of x (true for example in the returns to schooling example: earnings are more variable for those with more schooling).  In this case, conventional standard errors will tend to be “about right” or too small as the discussion in 8.1 suggests.
+[reference](http://www.mostlyharmlesseconometrics.com/2010/12/heteroskedasticity-and-standard-errors-big-and-small/)
+
+
+```{r on the real dataset}
+#3. sample_splitting
+dat <- generate_full_model_dat(data_shay_pre2, covariates, predictors, outcomes)
+split <- sample_splitting(dat, 0.8)
+train <- split$train
+test <- split$test
+outcome_idx <- 2
+remove_idx <- 1
+
+selector <- selector_factory(expander = generate_quad_terms)
+train_kept <- selector(train, base_var = covariates, add_var = predictors, outcome = outcomes[outcome_idx], remove = outcomes[remove_idx])
+    
+fit_train <- get_result(train, outcomes[outcome_idx], train_kept, outcomes[remove_idx])
+fit_test <- get_result(test, outcomes[outcome_idx], train_kept, outcomes[remove_idx])
+require(sandwich)
+fit_train_sand <- lmtest::coeftest(fit_train, vcov=sandwich)
+fit_test_sand <- lmtest::coeftest(fit_test, vcov=sandwich)
+par(mfcol=c(2,2))
+plot(fit_train)
+```
+
+```{r shuffled_data_train_vs_test_real, results="asis"}
+library(stargazer)
+stargazer(fit_train, fit_test, type = "html",  title = "Predicting Depressive Symptoms real data", column.labels = c("train", "test"), dep.var.labels = c("depression", "depression"))
+
+stargazer(fit_train_sand, fit_test_sand, type = "html",  title = "Predicting Depressive Symptoms real data robust", column.labels = c("train", "test"), dep.var.labels = c("depression", "depression"))
+# stargazer(flo, flo_test, type = "html", title = "Predicting Flourishing real data", column.labels = c("train", "test"), dep.var.labels = c("flourishing", "flourishing"))
+
+```

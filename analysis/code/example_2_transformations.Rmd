@@ -1,0 +1,201 @@
+---
+title: "example_2_transformations"
+author: "Anni Hong"
+date: "1/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(alr4)
+require(CPMCGLM)
+source("./helpers.r")
+```
+
+## R Markdown
+
+Weisberg, S. (2014). Applied linear regression. Hoboken, NJ: Wiley.
+
+(Weisberg, 2014) Chapter 8 Transformations
+- Power transformation: $U^{\lambda}$ where $\lambda \in [-2,2]$ usually {-1,0,1/3,1/2},  0 means log transformation here. 
+
+
+**The log rule**  If the values of a variable range over more than one order of magnitude and the variable is strictly positive, then replacing the variable by its logarithm is likely to be helpful.
+
+**The range rule**  If the range of a variable is considerably less than one order of magnitude, then any transformation of that variable is unlikely to be helpful.
+
+- Scaled power transformations preserve the direction of association, in the sense that if (X, Y) are positively related, then (psi(X, lambda), Y) are positively related for all values of lambda. With basic power transformations, the direction of association changes when lambda < 0.
+$$\Psi(X, \lambda) = \frac{X^\lambda -1}{\lambda}, \lambda \neq 0$$
+$$= log(X), \lambda = 0$$
+If we know λ, we can fit (8.4) via ols and get the residual sum of squares, RSS(λ). An estimate λˆ of λ is the value of λ that minimizes RSS(λ). We do not need to know λ very precisely, and selecting λ to minimize RSS(λ) from λ ∈ {−1, −1/2, 0, 1/3, 1/2, 1} is usually adequate.
+
+- The Box–Cox method is not transforming for linearity, but rather it is trans- forming for normality:
+
+- transformations for many predictors at the same time.
+1.  Transform predictors to get regressors for which the condition for lin- early related regressors holds, at least approximately. The regressors in X may include dummy variables that represent factors, which should not be transformed, as well as transformations of continuous predictors.
+2.  We can estimate g from the 2D scatterplot of Y versus b′x, where b is
+the ols estimator from the regression of Y on X. Almost equivalently, we can estimate a transformation of Y either from the inverse plot of 
+b ′x versus Y or from using the Box–Cox method.
+
+- 8.2.2  Automatic Choice of Transformation of Predictors
+V(λ) be the sample covariance matrix of the transformed data ψM(X,
+ˆ
+λ). The value l is selected as the value of λ that minimizes the logarithm of
+the determinant of V(λ).
+
+```{r X scaled-family transformation using RSS, , include=FALSE}
+data(ufc)
+ufc <- as.data.frame(ufc)
+summary(lm(Height~Dbh, data = ufc))
+plot(ufc$Dbh, ufc$Height)
+ufc_null <- ufc[sample(nrow(ufc)),]
+ufc_null$Height <- ufc$Height
+plot(ufc_null$Dbh, ufc_null$Height)
+summary(lm(Height~., data = ufc))
+
+lambda_seq <- seq(-2,2,0.2)
+for (l in lambda_seq){
+  if (l != 0){
+    x <- ufc$Dbh
+    x <- (x^l - 1)/l
+  } else {
+    x <- log(ufc$Dbh)
+  }
+  print(summary(lm(ufc$Height~x)))
+}
+
+```
+
+```{r, include=FALSE}
+dat <- make_data()
+lambda_seq <- seq(0,2,0.5)
+summary(lm(y~., data = cbind(dat$y, dat$X)))
+for (l in lambda_seq){
+  print(l)
+  if (l != 0){
+    dat$X[,1] <- (dat$X[,1]^l - 1)/l
+  } else {
+    dat$X[,1] <- log(dat$X[,1])
+  }
+
+  print(summary(lm(y~., data = cbind(dat$y, dat$X))))
+}
+```
+
+```{r, include=FALSE}
+dat$acpt <- (dat$acpt^(-2)/(-2))
+fit <- lm(rate~., data=Highway)
+fit<- CPMCGLM(as.formula(len~.), family="gaussian", link="identity", data=Highway, varcod="rate", boxcox=lambda_seq, N=100)
+summary(fit)
+bcPower(Highway, lambda = 2)
+```
+
+
+- increase sample size, exclude intercept 
+- generate from linear and look at the distribution of beta_1
+```{r bootstrap process}
+bootstrap_process <- function(outcome, covariates, B, m=1000, dataset=NULL){
+  train_res <- list()
+  test_res <- list()
+  for (i in 1:B){
+    if (is.null(data)) {
+      dat <- make_data(m)
+    } else {
+      dat <- cbind(bootstrap_sample(dataset[,-which(names(dataset) == outcome)], m), bootstrap_sample(dataset[,outcome], m))
+    }
+    split <- sample_splitting(dat)
+    ls <- get_lambdas(split$train, outcome)
+    fit_train <- post_transform_inference(split$train, outcome, covariates, ls)
+    fit_test <- post_transform_inference(split$test, outcome, covariates, ls)
+    train_res[[i]] <- fit_train
+    test_res[[i]] <- fit_test
+  }
+  res <- list(train_res = train_res, test_res = test_res)
+  return(res)
+}
+covariates <- paste0("x",c(1:10))
+res <- bootstrap_process("y", covariates, 10)
+mean(unlist(purrr::map(res$train_res, get_num_sig)) > 0)
+mean(unlist(purrr::map(res$test_res, get_num_sig)) > 0)
+mean(unlist(purrr::map(res$train_res, get_num_sig)))
+mean(unlist(purrr::map(res$test_res, get_num_sig)))
+```
+
+```{r effect as m increase}
+train_prop <- c()
+test_prop <- c()
+train_prop_sandwich <- c()
+test_prop_sandwich <- c()
+B = 100
+sample_size_seq <- seq(from=1000,to=2000, by=500)
+for (size in sample_size_seq){
+  print(size)
+  r <- bootstrap_process("y", covariates, B, size)
+  train_res <- r$train_res
+  test_res <- r$test_res
+  
+  #lm variance
+  train_sig <- purrr::map(train_res,get_num_sig,robust=F)
+  test_sig <- purrr::map(test_res,get_num_sig,robust=F)
+  train_prop <- c(train_prop, mean(train_sig > 0))
+  test_prop <- c(test_prop, mean(test_sig > 0))
+  
+  #robust variance
+  train_sig_sandwich <- purrr::map(train_res,get_num_sig,robust=T)
+  test_sig_sandwich <- purrr::map(test_res,get_num_sig,robust=T)
+  train_prop_sandwich <- c(train_prop_sandwich, mean(train_sig_sandwich > 0))
+  test_prop_sandwich <- c(test_prop_sandwich, mean(test_sig_sandwich > 0))
+}
+
+```
+
+```{r test vs train fdr plot}
+#par(mfcol=c(2,1))
+plot(sample_size_seq, test_prop, type = "l", col="blue", ylim = c(0,1), ylab = "P(at least 1 sig term under global null) ", main = "FDR for post transformation inference, test vs train")
+lines(sample_size_seq,train_prop, col="red")
+lines(sample_size_seq,test_prop_sandwich, col="skyblue")
+lines(sample_size_seq,train_prop_sandwich, col="pink")
+legend("topleft", legend=c("train lm", "test lm", "train robust", "test robust"),col=c("red", "blue", "pink", "skyblue"), lty=1:1, cex=1)
+```
+
+```{r checking linear assumption}
+par(mfcol=c(2,2))
+plot(train_res[[sample(length(train_res),1)]])
+plot(test_res[[sample(length(test_res),1)]])
+```
+
+## Using Boston Housing dataset
+
+```{r effect as m increase}
+require(MASS)
+data(Boston)
+dataset <- Boston
+outcome <- "medv"
+covariates <- colnames(Boston)[-which(colnames(Boston) == outcome)]
+
+train_prop <- c()
+test_prop <- c()
+train_prop_sandwich <- c()
+test_prop_sandwich <- c()
+B = 100
+sample_size_seq <- seq(from=100,to=200, by=50)
+for (size in sample_size_seq){
+  print(size)
+  r <- bootstrap_process(outcome, covariates, B, size, dataset)
+  train_res <- r$train_res
+  test_res <- r$test_res
+  
+  #lm variance
+  train_sig <- purrr::map(train_res,get_num_sig,robust=F)
+  test_sig <- purrr::map(test_res,get_num_sig,robust=F)
+  train_prop <- c(train_prop, mean(train_sig > 0))
+  test_prop <- c(test_prop, mean(test_sig > 0))
+  
+  #robust variance
+  train_sig_sandwich <- purrr::map(train_res,get_num_sig,robust=T)
+  test_sig_sandwich <- purrr::map(test_res,get_num_sig,robust=T)
+  train_prop_sandwich <- c(train_prop_sandwich, mean(train_sig_sandwich > 0))
+  test_prop_sandwich <- c(test_prop_sandwich, mean(test_sig_sandwich > 0))
+}
+
+```
