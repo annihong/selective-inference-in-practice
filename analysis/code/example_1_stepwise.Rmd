@@ -23,6 +23,12 @@ library(rms)
 library(sandwich)
 theme_set(theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()))
 ```
+## Todo:
+- reference more papers that uses stepwise regression for variable selection
+- explain other types of p-value based variable selection, i.e univariate p-value based selection
+- figure out why linearity does not hold when data is shuffled
+
+
 ## Example 1, model selection using stepwise regression based on p-values:  
 ## Textbook:
 **Probability and Statistics for Engineers and Scientists (4 edition) Anthony Hayter**
@@ -37,7 +43,7 @@ On Dec.16th 2020, Science Daily published an article [Three pillars of mental he
 0. The dataset was read in and processed the same way as the paper detailed in the supplementary material section. And then permuted to break the association between covariates and the outcome variables of interests.   
 
 ```{r step-0 data process, include=FALSE}
-data_shay  <- read_sav("../data/raw/2018-2019_Lifestyle_of_Young_Adults_Survey.sav")
+data_shay  <- read_sav("../../data/raw/2018-2019_Lifestyle_of_Young_Adults_Survey.sav")
 data_shay_pre1 <- data_shay %>% clean_names() %>% filter(included == 1)
 
 data_shay_pre2 <- data_shay_pre1 %>%
@@ -189,7 +195,7 @@ bootstrap_process <- function(data, B, outcome_idx, to_shuffle = T, m=nrow(data)
 
 ```
 
-```{r effect as m increase}
+```{r effect as m increase, cache=T}
 train_prop <- c()
 test_prop <- c()
 train_prop_sandwich <- c()
