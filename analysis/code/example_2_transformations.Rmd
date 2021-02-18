@@ -35,7 +35,7 @@ Weisberg, S. (2014). Applied linear regression. Hoboken, NJ: Wiley.
 
 - Scaled power transformations preserve the direction of association, in the sense that if (X, Y) are positively related, then (psi(X, lambda), Y) are positively related for all values of lambda. With basic power transformations, the direction of association changes when lambda < 0.
 $$\Psi(X, \lambda) = \frac{X^\lambda -1}{\lambda}, \lambda \neq 0$$
-$$= log(X), \lambda = 0$$
+$$= \log(X), \lambda = 0$$
 If we know λ, we can fit (8.4) via ols and get the residual sum of squares, RSS(λ). An estimate λˆ of λ is the value of λ that minimizes RSS(λ). We do not need to know λ very precisely, and selecting λ to minimize RSS(λ) from λ ∈ {−1, −1/2, 0, 1/3, 1/2, 1} is usually adequate.
 
 - The Box–Cox method is not transforming for linearity, but rather it is trans- forming for normality:
