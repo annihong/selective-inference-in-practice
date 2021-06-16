@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(warning = F, message = F, fig.align='center',fig.pos = 'h')
+knitr::opts_chunk$set(warning = F, message = F, fig.align='center',fig.pos = 'h', echo = F)
 source("./helpers.r")
 ```
 

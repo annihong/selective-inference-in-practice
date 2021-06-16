@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = F)
 require(alr4)
 require(CPMCGLM)
 source("./helpers.r")
@@ -21,7 +21,8 @@ data(Boston)
 - use CPMCGLM as remedy 
 - multiple testing control for selecting the number of cutpoints as well as the location of the cutpoints [Determining the optimal number and location of cutoff points with application to data of cervical cancer](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0176231#abstract0)
 - summarize different types of transformation used in practice
-
+- reference for the [car::powerTransfrom function](https://www.rdocumentation.org/packages/car/versions/2.1-4/topics/powerTransform), describe the MLE based procedure constrasting to min-p
+- Figuring out why FDR rate is high for both train and control
 ## Automatic Choice of Transformation of Predictors
 Weisberg, S. (2014). Applied linear regression. Hoboken, NJ: Wiley.
 
