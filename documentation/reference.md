@@ -61,3 +61,25 @@
 - [The effect of decay and lexical uncertainty on processing long-distance dependencies in reading](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7750004/) 
     - has data, Baysian
 
+
+Clergy Use of Suicide Prevention Competencies
+- Relationship of Experience, Education, and Training to Use of
+Competencies
+**Hypothesis 3 (H3): experience and training, but not education, will be related to the use of the competencies.**
+*Exploratory backward stepwise regression eliminations were performed to find the most parsimonious set of predictors of use of competencies.* Independent variables included experience (age, number of years leading religious services, number of contacts from suicidal people, number of suicide deaths, and number of suicide funerals), education (entered as a categorical variable), and training (number of suicide training hours).
+
+- simulate data base on the reported statistics 
+
+Virginia Nurse Bullying 
+Once assumptions were met, backward stepwise regres-sion analyses were conducted. A backward stepwiseregression model was built to predict the sum score of theS-NAQ based on the following factors: years of schoolnursing experience, whether the nurse was a union mem-ber, level of nursing education (LPN, diploma/associate,graduate degree), race, number of schools a nurse isresponsible for, the level ofschool the nurse worked in(middle school, high school, or combination schools),whether the nurse was working in a Title 1 school, whetherthe nurse was involved in an IEP/504 meetings, total num-ber of students the nurse was responsible in their individualschool or combined schools, and whether the nurses weresupervised by two supervisors. Gender and ethnicity werenot included in the regression analysis due to lack of varia-bility. All 16 variables were entered into the model at thesame time. The predictor variables with the largestpvaluewere eliminated from the model and those remaining vari-ables that met the criterion of the regression model (p<.05)were retained.
+
+Variables Associated With Communicative Participation After Head and Neck Cancer
+- The associations of the 17 variables with communicative participation were examined with multiple linear regression analysis in SPSS, version 18.0 (IBM). Communicative participation, age, time since diagnosis, and self-reported cognitive function were continuous variables; all others were categorical variables. Throughout the process of backward stepwise regression, model fit was analyzed with an overall regression F statistic. Individual variables with regression coefficients significant at P < .05 were retained in the model.
+- Before conducting the regression analyses, correlation analyses were performed to exclude potential multicollinearity among communicative participation and the 17 variables. Any variables with correlations greater than 0.70 would be considered for removal. This threshold has effectively indicated the point at which model estimation and subsequent prediction can be severely distorted by multicollinearity .20 Pearson product moment correlations were used for the continuous (interval) level data, whereas Spearman rank correlations were used for the categorical data (ordinal and nominal) (Table 2). Because no correlations were greater than the cutoff of 0.70, all variables were retained for entry into the regression analysis.
+
+Identification of Modifiable Social and Behavioral Factors Associated With Childhood Cognitive Performance
+- The analysis occurred in 3 stages. During stage 1, we selected those exposures (from the 155 total exposures) that were associated with cognitive performance, adjusting for the a priori–selected covariates that were identified as potential confounding variables. Thus, using 155 independent multivariable regression models (which were adjusted for the child’s age and sex, maternal and paternal ages at the child’s birth, and maternal cognitive performance), we estimated associations between each target exposure and the child’s cognitive performance. Target exposures were considered statistically significant at P = .05 after multiple-comparison adjustment for the false discovery rate.27,28
+
+In stage 2, we applied the least absolute shrinkage and selection operator (LASSO) method to a model that included all target exposures that had a statistically significant association with the outcome after correction for false discovery rate. The LASSO method decreases unstable effect estimates toward 0 and excludes colinear covariates.29-31
+
+In stage 3, factors retained in the LASSO regression model were incorporated into multiple parsimonious models to evaluate associations with adjustment for potential confounding variables of the specific exposures associated with cognitive performance that were being examined. For example, the final models for target exposures did not include variables that occurred after the target exposure (eg, no postnatal covariates were included in models of prenatal exposures).

@@ -79,7 +79,7 @@ corr_significant <- as.data.frame(res2[["P"]][covariates,c(predictors,outcomes)]
 
 covariates_kept <- corr_significant %>%
   select_all() %>%
-  filter_all(any_vars(.<= 0.05)) %>% rownames()
+  filter_all(any_vars(.<= 0.05 | is.na(.))) %>% rownames()
 
 fit <- lm(as.formula(paste0('cesd_c ~ - flourishing_c +', paste(covariates_kept, collapse = ' + '))), data=shuffled)
 
@@ -115,6 +115,15 @@ kept_dep_3 <- int_selector(shuffled_full, base_var = kept_dep_2, add_var = predi
 model_3_flo <- get_result(shuffled_full, outcomes[1], kept_flo_3, outcomes[2])
 model_3_dep <-get_result(shuffled_full, outcomes[2], kept_dep_3, outcomes[1])
 ```
+
+
+```{r res-p3, results = "asis", warning=FALSE}
+stargazer::stargazer(model_3_dep, model_3_flo, type = 'latex', intercept.top = T,intercept.bottom = F,
+          title = "Explaining Vaccination rate OLS results", header=FALSE,
+          font.size = "small",column.sep.width = "1pt",
+          single.row = TRUE, notes = "only significant State dummies  or State X Hesitant are included in the table")
+```
+
 
 Through the model selection process described in the research, we discovered many "significant" predictors in the shuffled dataset where no association should be found. Additionally, the p-values for significance were not adjusted for multiple testing thus further invalidate the inference.  
 
@@ -213,10 +222,10 @@ for (size in sample_size_seq){
   test_prop <- c(test_prop, mean(test_sig > 0))
   
   #robust variance
-  train_sig_sandwich <- purrr::map(train_res,get_num_sig_quad_term,robust=T)
-  test_sig_sandwich <- purrr::map(test_res,get_num_sig_quad_term,robust=T)
-  train_prop_sandwich <- c(train_prop_sandwich, mean(train_sig_sandwich > 0))
-  test_prop_sandwich <- c(test_prop_sandwich, mean(test_sig_sandwich > 0))
+  # train_sig_sandwich <- purrr::map(train_res,get_num_sig_quad_term,robust=T)
+  # test_sig_sandwich <- purrr::map(test_res,get_num_sig_quad_term,robust=T)
+  # train_prop_sandwich <- c(train_prop_sandwich, mean(train_sig_sandwich > 0))
+  # test_prop_sandwich <- c(test_prop_sandwich, mean(test_sig_sandwich > 0))
 }
 
 ```
@@ -229,6 +238,20 @@ lines(sample_size_seq,test_prop_sandwich, col="skyblue")
 lines(sample_size_seq,train_prop_sandwich, col="pink")
 legend("topleft", legend=c("train conv", "test conv", "train robust", "test robust"),col=c("red", "blue", "pink", "skyblue"), lty=1:1, cex=0.8)
 ```
+
+```{r}
+plot_data <- data.frame(list(sample_size_seq=sample_size_seq, test_prop=test_prop, train_prop=train_prop))
+ggplot(plot_data, aes(x=sample_size_seq)) +
+  geom_line(aes(y=test_prop, color = "test")) +  
+  geom_line(aes(y=train_prop, color="train")) + 
+  geom_point(aes(y=test_prop, color = "test")) +  
+  geom_point(aes(y=train_prop, color="train")) + 
+  scale_color_discrete(name="Legend") + 
+  labs(x = "Sample Size", y = "P(at least 1 sig quad term under global null) ", title = "False Discovery Rate (train vs test)") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
 As expected, the false discovery proportion is much higher in the training set where the quadratic terms were selected on. However, the false discovery proportion is also high when the significance level was determined by the robust variance instead the conventional linear model variance. The following diagnostic plots elucidate the reason behind such phenomenon.    
 ```{r checking linear assumption}
 par(mfcol=c(2,2))

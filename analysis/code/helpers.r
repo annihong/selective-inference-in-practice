@@ -45,7 +45,6 @@ selector_factory <- function(expander=generate_quad_terms, select_from=select_re
 
 #shuffle the covariates but keep the outcomes(a matrix) constant
 shuffle <- function(data, outcomes){
-  assertthat::assert_that(length(outcomes) > 1)
   shuffled <- data[sample(nrow(data)),]
   shuffled[,outcomes] <- data[,outcomes]
   return(shuffled)
@@ -134,7 +133,7 @@ get_coef_est <- function(fit, var_name){
 
 make_data <- function(outcome="y", m=1000, to_shuffle=F){
   y <- rlnorm(m)
-  X <- as.data.frame(purrr::map(1:10, rlnorm, n=m))
+  X <- as.data.frame(purrr::map(1:10, rnorm, n=m))
   covariates <- paste0("x",c(1:10))
   colnames(X) <- covariates
   X[,outcome] <- y
@@ -150,9 +149,9 @@ make_data <- function(outcome="y", m=1000, to_shuffle=F){
 # given the variable x to be transformed and the power of transformation
 # returns the boxcox transformed x
 boxcox_transform <- function(x, l){
-  assertthat::assert_that(is.vector(x))
+  #assertthat::assert_that(is.vector(x))
   if (l != 0){
-    x <- (x^l - 1)/l
+    x <- (x^l - 1)/(l)
   } else {
     x <- log(x)
   }
