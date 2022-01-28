@@ -11,6 +11,12 @@
     - still unclear why the min p procedure did not create problems for the boston data, think through the experiments I did. 
 
     ### *Task list for the week*: 
+    - [ ] write up an abstract and send to arun 
+    - [ ] share the write up with Arun 
+    - [ ] re-run the simulation and the organize the code for simple variables selection
+    - [ ] experiment with increasing sample size to test if robust and standard error agrees with each other 
+        - read the reference on robust variance
+    - [ ] min p base variable diotomization 
     ### *Proposed tasks for next week*
     1. 
     2.
