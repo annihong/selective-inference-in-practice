@@ -131,10 +131,10 @@ get_coef_est <- function(fit, var_name){
 # example 2
 
 
-make_data <- function(outcome="y", m=1000, to_shuffle=F){
-  y <- rlnorm(m)
-  X <- as.data.frame(purrr::map(1:10, rnorm, n=m))
-  covariates <- paste0("x",c(1:10))
+make_data <- function(outcome="y", m=1000, to_shuffle=F, y_dist=rnorm, x_dist=rnorm, n_x = 10){
+  y <- y_dist(m)
+  X <- as.data.frame(purrr::map(1:n_x, x_dist, n=m))
+  covariates <- paste0("x",c(1:n_x))
   colnames(X) <- covariates
   X[,outcome] <- y
   # X <- abs(X) + 10

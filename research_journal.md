@@ -11,12 +11,17 @@
     - still unclear why the min p procedure did not create problems for the boston data, think through the experiments I did. 
 
     ### *Task list for the week*: 
-    - [ ] write up an abstract and send to arun 
+    - [x] write up an abstract and send to arun 
     - [ ] share the write up with Arun 
-    - [ ] re-run the simulation and the organize the code for simple variables selection
-    - [ ] experiment with increasing sample size to test if robust and standard error agrees with each other 
-        - read the reference on robust variance
-    - [ ] min p base variable diotomization 
+    - [x] re-run the simulation and the organize the code for simple variables selection
+        - did the single variable version for log norm vs norm 
+    - [x] experiment with increasing sample size to test if robust and standard error agrees with each other 
+        - does not seem like it made a difference!
+        - [ ] read the reference on robust variance
+    - [x] min p base variable dichotomization
+        - does not work for single val but it does show 
+        - does r-sq based selection for y (log or not) invalidated the results?
+        - train and test do differ, FDR: 0.579 vs 0.449, how do you calculate FDR under global null?
     ### *Proposed tasks for next week*
     1. 
     2.

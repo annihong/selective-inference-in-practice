@@ -158,19 +158,26 @@ Psychologically Informed Implementations of Sugary-Drink Portion Limits
 
 - [Finding Optimal Cut-points for Continuous Covariates with Binary and Time-to-Event Outcomes](https://www.mayo.edu/research/documents/biostat-79pdf/doc-10027230)
     - pretty comprehensive review on what people do and how to correct for p-value inflation
-
+- [CPMCGLM: an R package for p-value adjustment when looking for an optimal transformation of a single explanatory variable in generalized linear models](https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-019-0711-2#Sec2)
 ## Sample Splitting  
 - [Valid Post-selection Inference in Assumption-lean Linear Regression](https://arxiv.org/pdf/1806.04119.pdf)
 >2.4. Alternative Approaches There exists an “obvious” approach to valid post-selection inference based on sample splitting, as examined by Rinaldo et al. (2016): split the data into two disjoint parts, then use one part for selecting a model Mˆ and the other part for inference in the selected model Mˆ . If the two parts of the data are stochastically independent of each other, post-selection inferences will be valid. For independent observations Rinaldo et al. (2016) were able to provide very general and powerful results. Sample splitting has considerable appeal due to its universal applicability under independence of the two parts: it “works” for any type of model selection, formal or informal, ... introduces another “researcher degree of freedom”, namely, the freedom to choose a particular split after having tried several splits. I
 
 ## Sandwich Variance
-- [The Sandwich Variance Estimator: Eciency Properties and Coverage Probability of Condence Intervals](https://www.stat.tamu.edu/~carroll/ftp/gk001.pdf)
+
+[The Sandwich Variance Estimator: Efficiency Properties
+and Coverage Probability of Confidence Intervals](https://epub.ub.uni-muenchen.de/1579/1/paper_189.pdf)
     - Sandwich variance has higher variance, thus CI_robust sometimes undercover, a possible reason for smaller sandwich variance than conventional variance
 
 ## General topics in reproducibility
 - [Reproducibility and Replicability in Science (2019)](https://www.nap.edu/read/25303/chapter/2) 
 - [Arun job talk: Valid Post-selection Inference: Why and How](https://arun-kuchibhotla.github.io/assets/others/JobTalk_covariate_selection_only.pdf)
 
+- [Exact post-selection inference, with application to the lasso](https://projecteuclid.org/journals/annals-of-statistics/volume-44/issue-3/Exact-post-selection-inference-with-application-to-the-lasso/10.1214/15-AOS1371.full)
+- [selective inference Ryan](https://cran.r-project.org/web/packages/selectiveInference/index.html)
+- [Stability Approach to Regularization Selection (StARS) for High Dimensional Graphical Models](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4138724/)
+- [doubleML](https://docs.doubleml.org/stable/index.html)
+- [Post-Selection and Post-Regularization Inference in Linear Models with Many Controls and Instruments](https://www.aeaweb.org/articles?id=10.1257/aer.p20151022)
 ## Other
 - [The effect of decay and lexical uncertainty on processing long-distance dependencies in reading](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7750004/) 
     - has data, Baysian

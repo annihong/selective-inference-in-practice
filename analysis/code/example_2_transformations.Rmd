@@ -54,7 +54,7 @@ V(λ) be the sample covariance matrix of the transformed data ψM(X,
 the determinant of V(λ).
 
 ```{r bootstrap process}
-bootstrap_process <- function(data_gen, B, outcome, covariates, m=nrow(data), to_shuffle = T){
+bootstrap_process <- function(data_gen, B, outcome, covariates, m=nrow(data),to_shuffle = T){
   train_res <- list()
   test_res <- list()
   for (i in 1:B){
@@ -73,6 +73,7 @@ bootstrap_process <- function(data_gen, B, outcome, covariates, m=nrow(data), to
 ```
 
 ```{r effect as m increase, cache = TRUE}
+n_x = 10
 train_prop <- c()
 test_prop <- c()
 train_prop_sandwich <- c()
@@ -81,7 +82,7 @@ B = 100
 sample_size_seq <- seq(from=400,to=800, by=100)
 for (size in sample_size_seq){
   print(size)
-  r <- bootstrap_process(make_data, B, "y", paste0("x",c(1:10)), size, F)
+  r <- bootstrap_process(make_data, B, "y", paste0("x",c(1:n_x)), size, F)
   train_res <- r$train_res
   test_res <- r$test_res
   
@@ -99,32 +100,7 @@ for (size in sample_size_seq){
 }
 
 ```
-```{r}
-prop_robust <- c()
-prop <- c()
 
-for (i in 1:50){
-  B = 100
-  res <- list()
-  for (i in 1:B) {
-    dat <- make_data(to_shuffle = T)
-    fit <- lm(y~., data = dat)
-    res[[i]] <- fit
-  }
-  sig <- purrr::map(res,get_num_sig,robust=F)
-  prop <- c(prop, mean(sig > 0))
-  
-  sig <- purrr::map(res,get_num_sig,robust=T)
-  prop_robust <- c(prop_robust, mean(sig > 0))
-}
-
-```
-
-```{r}
-plot(1:50, prop, type = "l", col="blue", ylim = c(0,1), ylab = "P(at least 1 sig non-intercept term) ", main = "FDR under global null, n = 100", xlab = "Trial")
-lines(1:50,prop_robust, col="red")
-legend("topleft", legend=c("robust", "lm"),col=c("red", "blue"), lty=1:1, cex=1)
-```
 
 
 ```{r test vs train fdr plot}
@@ -140,6 +116,70 @@ legend("topleft", legend=c("train lm", "test lm", "train robust", "test robust")
 par(mfcol=c(2,2))
 plot(train_res[[sample(length(train_res),1)]])
 plot(test_res[[sample(length(test_res),1)]])
+```
+
+## standard vs robust error on fully simulated data:
+
+x_i ~ norm
+y ~ norm
+```{r}
+prop_robust <- c()
+prop <- c()
+B_seq <-  seq(100,8000,1000)
+for (B in B_seq){
+  res <- list()
+  for (i in 1:B) {
+    dat <- make_data(to_shuffle = T)
+    fit <- lm(y~., data = dat)
+    res[[i]] <- fit
+  }
+  sig <- purrr::map(res,get_num_sig,robust=F)
+  prop <- c(prop, mean(sig > 0))
+  
+  sig <- purrr::map(res,get_num_sig,robust=T)
+  prop_robust <- c(prop_robust, mean(sig > 0))
+}
+
+prop
+prop_robust
+```
+
+```{r}
+plot(B_seq, prop, type = "l", col="blue", ylim = c(0,1), ylab = "P(at least 1 sig non-intercept term) ", main = "FDR under global null,normal dist, 10 x_i", xlab = "n")
+lines(B_seq,prop_robust, col="red")
+legend("topleft", legend=c("robust", "lm"),col=c("red", "blue"), lty=1:1, cex=1)
+```
+
+x_i ~ log_norm
+y ~ log_norm
+```{r}
+n_x = 1
+prop_robust <- c()
+prop <- c()
+B_seq <-  seq(100,8000,1000)
+for (B in B_seq){
+  res <- list()
+  for (i in 1:B) {
+    dat <- make_data(y_dist = rlnorm, x_dist = rlnorm, n_x=n_x)
+    fit <- lm(y~., data = dat)
+    res[[i]] <- fit
+  }
+  sig <- purrr::map(res,get_num_sig,robust=F)
+  prop <- c(prop, mean(sig > 0))
+  
+  sig <- purrr::map(res,get_num_sig,robust=T)
+  prop_robust <- c(prop_robust, mean(sig > 0))
+}
+
+prop
+prop_robust
+```
+
+
+```{r}
+plot(B_seq, prop, type = "l", col="blue", ylim = c(0,0.2), ylab = "P(at least 1 sig non-intercept term) ", main = paste0("FDR under global null,log normal dist, num_x_i = ", n_x), xlab = "n")
+lines(B_seq,prop_robust, col="red")
+legend("topleft", legend=c("robust", "lm"),col=c("red", "blue"), lty=1:1, cex=1)
 ```
 
 ## Using Boston Housing dataset
@@ -307,7 +347,7 @@ repeated_boston <- function(i, raw_data){
   shuffled <- shuffle(raw_data, outcomes)
   rsq <- sapply(outcomes, get_r_sq, shuffled)
   outcome <- names(which.max(rsq))
-  res <- sapply(p_grid, get_r_sq_box, outcome=outcome, var="nox")
+  res <- sapply(p_grid, get_r_sq_box, outcome=outcome, var="nox",data=shuffled)
   p <- p_grid[(which.max(res))]
   nox_trans <- boxcox_transform(shuffled$nox, p)
   trans_name <- paste0("nox_", p)
