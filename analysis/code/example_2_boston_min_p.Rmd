@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(echo = T, cache = T)
 require(alr4)
 require(CPMCGLM)
 source("./helpers.r")
@@ -83,22 +83,45 @@ bootstrap_process <- function(data, B, outcomes){
 
 
 ```{r}
-r <- bootstrap_process(data=boston_dat, B=1000, outcomes=outcomes)
+train_prop_sandwich <- c()
+test_prop_sandwich <- c()
+train_prop <- c()
+test_prop <- c()
+sample_size_seq <- seq(from=100,to=6000, by=1000)
+
+for (size in sample_size_seq){
+  r <- bootstrap_process(data=boston_dat, B=size, outcomes=outcomes)
   train_res <- r$train_res
   test_res <- r$test_res
   
   #lm variance
-
+  
   train_sig <- purrr::map(train_res,get_num_sig,robust=F)
   test_sig <- purrr::map(test_res,get_num_sig,robust=F)
-  train_prop <- mean(train_sig > 0)
-  test_prop <- mean(test_sig > 0)
-  train_prop
-  test_prop
+  train_prop <- c(train_prop, mean(train_sig > 0))
+  test_prop <- c(test_prop, mean(test_sig > 0))
   
-  # #robust variance
-  # train_sig_sandwich <- purrr::map(train_res,get_num_sig,robust=T)
-  # test_sig_sandwich <- purrr::map(test_res,get_num_sig,robust=T)
-  # train_prop_sandwich <- mean(train_sig_sandwich > 0)
-  # test_prop_sandwich <- mean(test_sig_sandwich > 0)
+  
+  #robust variance
+  train_sig_sandwich <- purrr::map(train_res,get_num_sig,robust=T)
+  test_sig_sandwich <- purrr::map(test_res,get_num_sig,robust=T)
+  train_prop_sandwich <- c(train_prop_sandwich, mean(train_sig_sandwich > 0))
+  test_prop_sandwich <- c(test_prop_sandwich, mean(test_sig_sandwich > 0))  
+}
+
+```
+
+```{r test vs train fdr plot Boston}
+#par(mfcol=c(2,1))
+plot(sample_size_seq, test_prop, type = "l", col="blue", ylim = c(0,1), ylab = "P(at least 1 sig term under global null) ", main = "FDR for post transformation inference, test vs train (Boston)")
+lines(sample_size_seq,train_prop, col="red")
+lines(sample_size_seq,test_prop_sandwich, col="skyblue")
+lines(sample_size_seq,train_prop_sandwich, col="pink")
+legend("topleft", legend=c("train lm", "test lm", "train robust", "test robust"),col=c("red", "blue", "pink", "skyblue"), lty=1:1, cex=1)
+```
+
+```{r checking linear assumption boston}
+par(mfcol=c(2,2))
+plot(train_res[[sample(length(train_res),1)]])
+plot(test_res[[sample(length(test_res),1)]])
 ```

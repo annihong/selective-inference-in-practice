@@ -127,7 +127,81 @@ stargazer::stargazer(model_3_dep, model_3_flo, type = 'latex', intercept.top = T
 
 Through the model selection process described in the research, we discovered many "significant" predictors in the shuffled dataset where no association should be found. Additionally, the p-values for significance were not adjusted for multiple testing thus further invalidate the inference.  
 
-## remedy for post selection inference  
+## remedy for post selection inference 
+
+### POSI: simultaneous inference:
+```{r}
+library(PoSI)
+full <- generate_formula(outcomes[1], c(generate_quad_terms(predictors), covariates))
+full_df <- model.matrix(lm(full, data=data_shay_pre2))
+posi <- PoSI(full_df, modelSZ = 1:ncol(full_df), center = F, scale = F, verbose = 1,
+Nsim = 10, bundleSZ = 100000, eps = 1e-08)
+```
+
+```{r}
+library(PoSI)
+set.seed(090522)
+full <- generate_formula(outcomes[1], c(generate_quad_terms(predictors), covariates))
+shuffled = shuffle(data_shay_pre2, outcomes)
+full_df <- model.matrix(lm(full, data=shuffled))
+posi_null <- PoSI(full_df, modelSZ = 1:ncol(full_df), center = F, scale = F, verbose = 1,
+Nsim = 10, bundleSZ = 100000, eps = 1e-08)
+```
+
+
+```{r}
+posi_flo <- summary(posi, confidence = c(0.95, 0.99), alpha = NULL,
+df.err = NULL, eps.PoSI = 1e-06, digits = 3)
+```
+    K.PoSI K.Bonferroni K.Scheffe
+95%  3.978        6.659     6.334
+99%  4.414        6.892     6.853
+
+```{r}
+model_1_flo_posi <- lm(generate_formula(outcomes[1], covariates), data = data_shay_pre2)
+sig_flo <- abs(summary(model_1_flo_posi)$coefficients[,c("t value")]) > posi_flo[1,1]
+names(sig_flo)[sig_flo]
+```
+Using the max-t simultaneous approach at $\alpha = 0.05$, the only significant variable in Model 1 (just using the covariates) is SES in predicting flourishing. 
+
+```{r}
+selector <- selector_factory(expander = generate_quad_terms)
+kept <- selector(data_shay_pre2, base_var = covariates, add_var = predictors, outcome = outcomes[1], remove = outcomes[2])
+full_dat <- generate_full_model_dat(data_shay_pre2, covariates, predictors, outcomes)
+model_2_flo_posi <- lm(generate_formula(outcomes[1], kept), data = full_dat)
+sig_flo <- abs(summary(model_2_flo_posi)$coefficients[,c("t value")]) > posi_flo[1,1]
+names(sig_flo)[sig_flo]
+```
+Using the max-t simultaneous approach at $\alpha = 0.05$, the only significant variable in Model 2 (covariates, predictors, and the selected quadratic terms) is SES in predicting flourishing. 
+
+```{r}
+posi_flo_null <- summary(posi_null, confidence = c(0.95, 0.99), alpha = NULL,
+df.err = NULL, eps.PoSI = 1e-06, digits = 3)
+```
+    K.PoSI K.Bonferroni K.Scheffe
+95%  4.020        6.659     6.334
+99%  4.415        6.892     6.853
+```{r}
+res <- c()
+for (i in 1:100000){
+  shuffled = shuffle(data_shay_pre2, outcomes)
+  selector <- selector_factory(expander = generate_quad_terms)
+  kept <- selector(shuffled, base_var = covariates, add_var = predictors, outcome = outcomes[1], remove = outcomes[2])
+  full_dat <- generate_full_model_dat(shuffled, covariates, predictors, outcomes)
+  model_2_flo_posi_null <- lm(generate_formula(outcomes[1], kept), data = full_dat)
+  sig_flo <- abs(summary(model_2_flo_posi_null)$coefficients[,c("t value")]) > posi_flo_null[1,1]
+  names(sig_flo)[sig_flo]
+  res <- c(res, sum(sig_flo) > 1)
+}
+```
+```{r}
+sum(res)/100000
+```
+Out of 100000 trials, 8 iterations had any significant variable 
+
+### Sample Splitting 
+
+
 Aware of the replication crisis in Psychology, the researchers write, 
 "We also used 10-fold cross-validation to determine whether any interaction terms would be useful for predicting out-of-sample, above and beyond the no-interaction model. Cross-validation involves splitting data into several subsets or “folds” and then repeatedly fitting the model to all but one fold and testing the model on the leftover fold (Koul et al., 2018)."    
 Through their cross-validation procedure, the researchers concluded that none of the interaction terms they included in the model helps with out-of-sample prediction. 
