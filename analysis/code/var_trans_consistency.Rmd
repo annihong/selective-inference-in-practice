@@ -1,0 +1,139 @@
+---
+title: "var_trans_consistency"
+author: "Anni Hong"
+date: "3/28/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("./helpers.r")
+```
+
+
+```{r}
+generate_data <- function(n, power_f){
+  power = power_f(n)
+  x1 = runif(n)
+  x2 = runif(n)
+  y = 0.5*x1 + 0.5*boxcox_transform(x2,power) + rnorm(n)
+  return(list(y = y, X = cbind(x1,x2)))
+}
+
+select_power <- function(data){
+  powers <- c(1,0)
+  fit1 <- lm(data$y ~ -1 + data$X[,1] + boxcox_transform((data$X[,2]),1))
+  fit2 <- lm(data$y ~ -1 + data$X[,1] + boxcox_transform((data$X[,2]),0))
+  models <- list(fit1,fit2)
+  rss <- sapply(models, deviance)
+  idx <- which.min(rss)
+  power <- powers[idx]
+  alpha_hat <- models[[idx]]$coefficients[1]
+  beta_hat <- models[[idx]]$coefficients[2]
+  return(c(power, alpha_hat, beta_hat))
+}
+
+var_consistency <- function(power_f, n, B=500){
+  res <- list()
+  for (b in 1:B) {
+    data <- generate_data(n, power_f)
+    selected <- select_power(data)
+    res[[b]] <- selected
+  }
+  res <- do.call(rbind, res)
+  colnames(res) <- c("power", "a_hat", "b_hat")
+  return(res)
+}
+
+power_f <- function(base) {
+  f_n <- function(n){
+    return(base + 1/(3 * sqrt(n)))
+  }
+}
+
+bases <- (11 + 0.3 * (0:20))/30
+#bases <- seq(0.35, 0.45, 0.005)
+f_s <- lapply(bases, power_f)
+
+probs_k <- function(k) {
+  res <- lapply(f_s, var_consistency, n = 10^k, B=100)
+  res <- sapply(res, function(dat) mean(dat[,1]))
+  return(res)  
+}
+
+```
+
+```{r}
+max_k <- 5
+probs <- lapply(1:max_k, probs_k)
+res <- data.frame(do.call(cbind, probs))
+colnames(res) <- paste0("x", seq(1:max_k))
+```
+
+
+```{r}
+require(ggplot2)
+require(dplyr)
+ggplot(res, aes(x=bases)) + 
+  geom_line(aes(y=x2, color="n = 10^2"))+ 
+  geom_line(aes(y=x3, color="n = 10^3")) +
+  geom_line(aes(y=x4, color="n = 10^4")) +
+  geom_line(aes(y=x5, color="n = 10^5")) +
+  scale_color_discrete(name="Legend") + labs(title = "Probability of selecting the \"right\" power") + ylab("P(power_hat = 1)") + xlab("Limit of the true power as n -> inf") + theme(plot.title =element_text(hjust = 0.5))
+```
+Distribution of $\hat{\alpha}$
+```{r}
+n = 10000
+B = 2000
+
+p_seq <- seq(0.367, 1, 0.2)
+plots <- list()
+i=1
+for (p in p_seq) {
+  raw <- data.frame(var_consistency(power_f = function(x) p, n = n, B = B))
+  print(mean(raw$power))
+  print(mean(raw$a_hat))
+  print(mean(raw$b_hat))
+raw$a_hat <- (raw$a_hat) * sqrt(n)
+ plot_a <- raw %>% ggplot(aes(x=a_hat)) +
+     geom_histogram(aes(y=..density..), bins=50, alpha=0.8) + 
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    geom_density() +
+    #labs(fill="", title = paste("distribution of alpha_hat,", p)) +
+  theme(plot.title = element_text(hjust = 0.5), text = element_text(size=8)) + 
+   ylab('') + xlab("") + ggtitle(paste('lambda^0 =', p))
+ 
+ plots[[i]] <- plot_a
+ i = i + 1
+}
+
+do.call(gridExtra::grid.arrange, c(plots, ncol=2))
+```
+Distribution of $\hat{\alpha}$
+```{r}
+n = 1000
+B = 1000
+p_seq <- seq(0.35, 0.45, 0.01)
+for (p in p_seq) {
+  raw <- data.frame(var_consistency(power_f = function(x) p, n = n, B = B))
+raw$b_hat <- (raw$b_hat - 0.5) * sqrt(n)
+ plot_a <- raw %>% ggplot(aes(x=b_hat)) +
+     geom_histogram(aes(y=..density..), bins=50, alpha=0.8) + 
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    geom_density() +
+    #labs(fill="", title = paste("distribution of alpha_hat,", p)) +
+  theme(plot.title = element_text(hjust = 0.5), text = element_text(size=8)) + ylab('')
+ print(p)
+ print(plot_a)
+}
+
+# raw %>% ggplot(aes(x=b_hat, fill=as.factor(power))) +
+#      geom_histogram(aes(y=..density..), bins=60, alpha=0.8) + 
+#     scale_fill_manual(values=c("#69b3a2", "#404080")) +
+#     geom_density() +
+#     labs(fill="", title = "distribution of beta_hat") +
+#   theme(plot.title = element_text(hjust = 0.5), text = element_text(size=8)) + ylab('')
+# mean(raw$power)
+```
+
+

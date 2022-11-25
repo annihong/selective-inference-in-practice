@@ -77,15 +77,27 @@ sample_splitting <- function(data, train_fraction=0.5){
   # base_var: the variables that remain the same, not expanded
   # add_var: the variables that will be expanded into quadratic and interaction terms
 # returns a full dataset through model.matrix
-generate_full_model_dat <- function(data, base_var, add_var, outcomes){
-  full_model <- generate_formula(outcomes[1], c(
-                                             base_var, 
-                                             add_var, 
-                                             generate_quad_terms(add_var),
-                                             generate_interaction_terms(add_var)
-                                             ))
+generate_full_model_dat <- function(data, base_var, add_var, outcomes, interaction=TRUE){
+  if (interaction){
+    full_model <- generate_formula(outcomes[1], c(
+      base_var, 
+      add_var, 
+      generate_quad_terms(add_var),
+      generate_interaction_terms(add_var)
+    ))
+  } else {
+    full_model <- generate_formula(outcomes[1], c(
+      base_var, 
+      add_var, 
+      generate_quad_terms(add_var)
+    ))  
+  }
+  
   df <- as.data.frame(model.matrix(lm(as.formula(full_model), data = data)))
-  return(cbind(df,data))
+  res = merge(df,data)
+  #unique_cols <- unique(colnames(res))
+  #res <- res[,colnames(res) %in% unique_cols]
+  return(res)
 }
 
 #given the outcome and covariates

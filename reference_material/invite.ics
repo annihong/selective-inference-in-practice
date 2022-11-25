@@ -1,0 +1,40 @@
+BEGIN:VCALENDAR
+PRODID:-//Google Inc//Google Calendar 70.9054//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+METHOD:REQUEST
+BEGIN:VEVENT
+DTSTART:20220301T203000Z
+DTEND:20220301T210000Z
+DTSTAMP:20220224T213916Z
+ORGANIZER;CN=myshen@andrew.cmu.edu:mailto:myshen@andrew.cmu.edu
+UID:8850452C-8BE8-4235-AA1E-CE67F9080B50
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+ TRUE;CN=annihong@andrew.cmu.edu;X-NUM-GUESTS=0:mailto:annihong@andrew.cmu.e
+ du
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+ TRUE;CN=mrmeyer@andrew.cmu.edu;X-NUM-GUESTS=0:mailto:mrmeyer@andrew.cmu.edu
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE
+ ;CN=myshen@andrew.cmu.edu;X-NUM-GUESTS=0:mailto:myshen@andrew.cmu.edu
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+ TRUE;CN=samanthn@andrew.cmu.edu;X-NUM-GUESTS=0:mailto:samanthn@andrew.cmu.e
+ du
+X-MICROSOFT-CDO-OWNERAPPTID:-328390927
+CREATED:20220224T213914Z
+DESCRIPTION:-::~:~::~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~
+ :~:~:~:~:~:~:~:~::~:~::-\nDo not edit this section of the description.\n\nV
+ iew your event at https://calendar.google.com/calendar/event?action=VIEW&ei
+ d=XzcwczNhYzFrNmtwNDZiOW84OTJqZ2I5azY4cGphYmExODRva2FiYTM4a3IzZWhocDYwczMwZ
+ 2hsNjAgYW5uaWhvbmdAYW5kcmV3LmNtdS5lZHU&tok=MjEjbXlzaGVuQGFuZHJldy5jbXUuZWR1
+ YjU3MTM0YTQyNTM4MWY1YmVlZWZkYTVkZTkwMjY0MzRmMjRlMzE1YQ&ctz=America%2FLos_An
+ geles&hl=en&es=1.\n-::~:~::~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:
+ ~:~:~:~:~:~:~:~:~:~:~:~::~:~::-
+LAST-MODIFIED:20220224T213915Z
+LOCATION:https://cmu.zoom.us/j/99405273136?pwd=aXJ4Y2FwNE14WlhwU1RpVG84TVNG
+ QT09
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:WinS Matched Pairs Meeting
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR

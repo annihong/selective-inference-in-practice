@@ -1,0 +1,285 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={example1\_remedies},
+  pdfauthor={Anni Hong},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+
+\title{example1\_remedies}
+\author{Anni Hong}
+\date{10/19/2022}
+
+\begin{document}
+\maketitle
+
+\hypertarget{remedy-1-sample-splitting}{%
+\subsection{Remedy 1: sample
+splitting}\label{remedy-1-sample-splitting}}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  The dataset is splitted into training (n = 800) and testing(n = 311)
+  sets.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{full_df <-}\StringTok{ }\KeywordTok{generate_full_model_dat}\NormalTok{(data_shay_pre2, }\DataTypeTok{base_var =}\NormalTok{ covariates, }\DataTypeTok{add_var =}\NormalTok{ predictors, }\DataTypeTok{outcomes =}\NormalTok{ outcomes)}
+\NormalTok{split <-}\StringTok{ }\KeywordTok{sample_splitting}\NormalTok{(full_df, }\FloatTok{0.8}\NormalTok{)}
+\NormalTok{train <-}\StringTok{ }\NormalTok{split[[}\DecValTok{1}\NormalTok{]]}
+\NormalTok{test <-}\StringTok{ }\NormalTok{split[[}\DecValTok{2}\NormalTok{]]}
+\end{Highlighting}
+\end{Shaded}
+
+step 2 was also repeated on the training set, slightly different
+quadratic terms were selected.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{quad_selector <-}\StringTok{ }\KeywordTok{selector_factory}\NormalTok{()}
+\NormalTok{kept_flo_}\DecValTok{2}\NormalTok{ <-}\StringTok{ }\KeywordTok{quad_selector}\NormalTok{(train, }\DataTypeTok{base_var =}\NormalTok{ covariates, }\DataTypeTok{add_var =}\NormalTok{ predictors, }\DataTypeTok{outcome =}\NormalTok{ outcomes[}\DecValTok{1}\NormalTok{], }\DataTypeTok{remove =}\NormalTok{ outcomes[}\DecValTok{2}\NormalTok{])}
+
+\NormalTok{model_}\DecValTok{2}\NormalTok{_flo <-}\StringTok{ }\KeywordTok{get_result}\NormalTok{(train, outcomes[}\DecValTok{1}\NormalTok{], kept_flo_}\DecValTok{2}\NormalTok{, outcomes[}\DecValTok{2}\NormalTok{])}
+\end{Highlighting}
+\end{Shaded}
+
+Now we extract the set of selected variables from the above procedure
+and run the same model on the testing set which remained untouched in
+the selection process. We will focus on the quadratic terms since they
+were selected for. In the training set, \(\text{soda_daily}^2\),
+\(\text{raw_fruit_veggie}^2\), \(\text{sleep_quality}^2\),
+\(\text{activity}^2\) are significant at \(\alpha = 0.05\). However in
+the testing set, only \(\text{soda_daily}^2\) remained significant, with
+reduced significance and flipped sign.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{model_}\DecValTok{2}\NormalTok{_flo_test <-}\StringTok{ }\KeywordTok{get_result}\NormalTok{(test, outcomes[}\DecValTok{1}\NormalTok{], kept_flo_}\DecValTok{2}\NormalTok{, outcomes[}\DecValTok{2}\NormalTok{])}
+\end{Highlighting}
+\end{Shaded}
+
+\% Table created by stargazer v.5.2.2 by Marek Hlavac, Harvard
+University. E-mail: hlavac at fas.harvard.edu \% Date and time: Wed, Oct
+19, 2022 - 13:05:10
+
+\begin{table}[!htbp] \centering 
+  \caption{Predicting Flourishing: sample splitting} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lcc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{2}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-3} 
+\\[-1.8ex] & \multicolumn{2}{c}{flourishing} \\ 
+ & train & test \\ 
+\\[-1.8ex] & (1) & (2)\\ 
+\hline \\[-1.8ex] 
+ age\_c & 0.040$^{*}$ & 0.011 \\ 
+  & (0.021) & (0.044) \\ 
+  & & \\ 
+ genderGenderDiverse & 0.262 & $-$0.616 \\ 
+  & (0.265) & (0.605) \\ 
+  & & \\ 
+ genderMale & $-$0.247$^{***}$ & $-$0.045 \\ 
+  & (0.079) & (0.171) \\ 
+  & & \\ 
+ ethnicity\_catAsian & $-$0.318$^{**}$ & $-$0.287 \\ 
+  & (0.128) & (0.284) \\ 
+  & & \\ 
+ ethnicity\_catBlack & 0.245$^{*}$ & 0.224 \\ 
+  & (0.145) & (0.505) \\ 
+  & & \\ 
+ ethnicity\_catHispanic & $-$0.159 & $-$0.706$^{**}$ \\ 
+  & (0.181) & (0.329) \\ 
+  & & \\ 
+ ethnicity\_catOther & 0.011 & $-$0.241 \\ 
+  & (0.090) & (0.198) \\ 
+  & & \\ 
+ sample1 & $-$0.220$^{*}$ & $-$0.301 \\ 
+  & (0.119) & (0.239) \\ 
+  & & \\ 
+ unemployedUnemployed & $-$0.190 & $-$0.497$^{**}$ \\ 
+  & (0.118) & (0.252) \\ 
+  & & \\ 
+ ses\_c & 0.229$^{***}$ & 0.282$^{***}$ \\ 
+  & (0.028) & (0.068) \\ 
+  & & \\ 
+ bmi\_c & $-$0.0001 & 0.001 \\ 
+  & (0.006) & (0.013) \\ 
+  & & \\ 
+ conditionHasnohealthconditions & 0.180$^{**}$ & $-$0.066 \\ 
+  & (0.077) & (0.182) \\ 
+  & & \\ 
+ medmoodYES & $-$0.143 & $-$0.368$^{**}$ \\ 
+  & (0.088) & (0.185) \\ 
+  & & \\ 
+ vitsup & 0.038 & 0.009 \\ 
+  & (0.042) & (0.095) \\ 
+  & & \\ 
+ allergyNoFoodAllergy & 0.013 & $-$0.310 \\ 
+  & (0.092) & (0.208) \\ 
+  & & \\ 
+ vegetarianEatssomemeats & 0.064 & $-$0.409 \\ 
+  & (0.130) & (0.338) \\ 
+  & & \\ 
+ alcohol\_daily\_c & 0.025 & $-$0.085 \\ 
+  & (0.029) & (0.076) \\ 
+  & & \\ 
+ regsmoke1 & 0.111 & 0.163 \\ 
+  & (0.120) & (0.288) \\ 
+  & & \\ 
+ sleep\_quantity\_c & $-$0.006 & $-$0.005 \\ 
+  & (0.025) & (0.055) \\ 
+  & & \\ 
+ sleep\_quality\_c & 0.403$^{***}$ & 0.255$^{***}$ \\ 
+  & (0.038) & (0.086) \\ 
+  & & \\ 
+ activity\_c & 0.099$^{***}$ & 0.103$^{**}$ \\ 
+  & (0.019) & (0.042) \\ 
+  & & \\ 
+ raw\_fv\_c & 0.087$^{***}$ & 0.057 \\ 
+  & (0.030) & (0.063) \\ 
+  & & \\ 
+ cooked\_fv\_c & $-$0.028 & $-$0.107 \\ 
+  & (0.046) & (0.104) \\ 
+  & & \\ 
+ fastfood\_daily\_c & $-$0.030 & $-$0.441 \\ 
+  & (0.153) & (0.276) \\ 
+  & & \\ 
+ sweets\_daily\_c & 0.028 & $-$0.059 \\ 
+  & (0.040) & (0.076) \\ 
+  & & \\ 
+ soda\_daily\_c & 0.133$^{**}$ & $-$0.201 \\ 
+  & (0.067) & (0.140) \\ 
+  & & \\ 
+ I(soda\_daily\_c$\hat{\mkern6mu}$2) & $-$0.054$^{***}$ & 0.055$^{*}$ \\ 
+  & (0.017) & (0.032) \\ 
+  & & \\ 
+ I(raw\_fv\_c$\hat{\mkern6mu}$2) & $-$0.015$^{**}$ & $-$0.018 \\ 
+  & (0.006) & (0.014) \\ 
+  & & \\ 
+ I(sleep\_quality\_c$\hat{\mkern6mu}$2) & $-$0.057$^{**}$ & $-$0.020 \\ 
+  & (0.027) & (0.063) \\ 
+  & & \\ 
+ I(activity\_c$\hat{\mkern6mu}$2) & $-$0.015$^{*}$ & 0.022 \\ 
+  & (0.008) & (0.019) \\ 
+  & & \\ 
+ I(fastfood\_daily\_c$\hat{\mkern6mu}$2) & $-$0.113 & 0.103 \\ 
+  & (0.075) & (0.081) \\ 
+  & & \\ 
+ I(cooked\_fv\_c$\hat{\mkern6mu}$2) & $-$0.025 & 0.041 \\ 
+  & (0.017) & (0.035) \\ 
+  & & \\ 
+ Constant & 0.304$^{*}$ & 1.011$^{**}$ \\ 
+  & (0.177) & (0.433) \\ 
+  & & \\ 
+\hline \\[-1.8ex] 
+Observations & 889 & 222 \\ 
+R$^{2}$ & 0.368 & 0.454 \\ 
+Adjusted R$^{2}$ & 0.344 & 0.361 \\ 
+Residual Std. Error & 0.960 (df = 856) & 1.016 (df = 189) \\ 
+F Statistic & 15.552$^{***}$ (df = 32; 856) & 4.904$^{***}$ (df = 32; 189) \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table}
+
+\end{document}

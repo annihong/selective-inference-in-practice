@@ -1,0 +1,127 @@
+---
+title: "example_2_boston_min_p"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T, cache = T)
+require(alr4)
+require(CPMCGLM)
+source("./helpers.r")
+require(MASS)
+data(Boston)
+```
+
+```{r}
+variables  <- c("age", "rm_sq", "ldis", "lrad", "tax", "ptratio", "black", "lstat", "crim", "zn", "indus", "chas", "nox", "medv")
+
+f <- as.formula(medv ~ I(rm^2) + age + log(dis) + log(rad) + tax + ptratio + I((black -0.63)^2) + lstat + crim + zn + indus + chas +nox)
+boston_dat <- data.frame(model.matrix(f, Boston))[,-1]
+covariates <- colnames(boston_dat)
+outcomes <- c("mv", "lmv")
+boston_dat["mv"] <- Boston$medv
+boston_dat["lmv"] <- log(Boston$medv)
+
+```
+
+```{r}
+get_r_sq <- function(outcome, data) {
+  f <- generate_formula(outcome, covariates)
+  fit_mv <- lm(f, data)
+  return(summary(fit_mv)$ r.squared)  
+}
+
+get_r_sq_box <- function(outcome, p, var, data=boston_null){
+  var_trans <- boxcox_transform(as.vector(data[var]), p)
+  new_data <- data
+  new_data[var] <- var_trans
+  return(get_r_sq(outcome, new_data))
+}
+p_grid <- c(-1, -1/2, 0, 1/3, 1/2, 1)
+
+```
+
+
+"One of the major objectives in estimating the hedonic housing equation was to determine the best fitting functional form. Comparing models with either median value of owner-occupied homes (MV) or Log( MV) as the dependent variable, we found that the semilog version provided a slightly better fit."
+
+## step 1: determine the transformation on dependent variable. 
+```{r}
+#given the shuffled data, return a fit
+min_p_boston <- function(boston_null){
+  #boston_null <- shuffle(boston_dat, outcomes)
+  selected_y <- names(which.max(sapply(outcomes, get_r_sq, boston_null)))
+  
+  res <- sapply(p_grid, get_r_sq_box, outcome=selected_y, var="nox", data = boston_null)
+  selected_p <- p_grid[(which.max(res))]
+  nox_trans <- (boston_null$nox)^selected_p
+  trans_name <- paste0("nox_", selected_p)
+  trans_name <- gsub( "-", "neg", trans_name)
+  
+  boston_null[trans_name] <- nox_trans
+  covariates_final <- c(covariates[-which(covariates == "nox")], trans_name)
+  f_final <- generate_formula(selected_y, covariates_final)
+  return(lm(f_final, boston_null))
+}
+```
+
+```{r}
+bootstrap_process <- function(data, B, outcomes){
+  train_res <- list()
+  test_res <- list()
+  for (i in 1:B){
+    null <- shuffle(data, outcomes)
+    split <- sample_splitting(null)
+    fit_train <- min_p_boston(boston_null=split$train)
+    fit_test <- lm(generate_formula("mv", covariates), split$test)
+    train_res[[i]] <- fit_train
+    test_res[[i]] <- fit_test
+  }
+  res <- list(train_res = train_res, test_res = test_res)
+  return(res)
+}
+```
+
+
+```{r}
+train_prop_sandwich <- c()
+test_prop_sandwich <- c()
+train_prop <- c()
+test_prop <- c()
+sample_size_seq <- seq(from=100,to=10000, by=2000)
+
+for (size in sample_size_seq){
+  r <- bootstrap_process(data=boston_dat, B=size, outcomes=outcomes)
+  train_res <- r$train_res
+  test_res <- r$test_res
+  
+  #lm variance
+  
+  train_sig <- purrr::map(train_res,get_num_sig,robust=F)
+  test_sig <- purrr::map(test_res,get_num_sig,robust=F)
+  train_prop <- c(train_prop, mean(train_sig > 0))
+  test_prop <- c(test_prop, mean(test_sig > 0))
+  
+  
+  #robust variance
+  train_sig_sandwich <- purrr::map(train_res,get_num_sig,robust=T)
+  test_sig_sandwich <- purrr::map(test_res,get_num_sig,robust=T)
+  train_prop_sandwich <- c(train_prop_sandwich, mean(train_sig_sandwich > 0))
+  test_prop_sandwich <- c(test_prop_sandwich, mean(test_sig_sandwich > 0))  
+}
+
+```
+
+```{r test vs train fdr plot Boston}
+#par(mfcol=c(2,1))
+plot(sample_size_seq, test_prop, type = "l", col="blue", ylim = c(0.3,0.7), ylab = "P(at least 1 sig term under global null) ", main = "FDR for post transformation inference, test vs train (Boston)")
+lines(sample_size_seq,train_prop, col="red")
+#lines(sample_size_seq,test_prop_sandwich, col="skyblue")
+#lines(sample_size_seq,train_prop_sandwich, col="pink")
+legend("topleft", legend=c("train lm", "test lm"),col=c("red", "blue"), lty=1:1, cex=1)
+```
+
+```{r checking linear assumption boston}
+par(mfcol=c(2,2))
+plot(train_res[[sample(length(train_res),1)]])
+plot(test_res[[sample(length(test_res),1)]])
+```

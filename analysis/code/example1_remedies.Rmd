@@ -1,0 +1,238 @@
+---
+title: "example1_remedies"
+author: "Anni Hong"
+date: "10/19/2022"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = F, message = F, fig.align='center',fig.pos = 'h', echo = T )
+source("./helpers.r")
+```
+
+```{r, include=FALSE}
+library(haven)
+library(tidyverse) 
+library(haven) 
+library(labelled) 
+library(janitor) 
+library(broom) 
+library(caret) 
+library(Hmisc)
+library(rms)
+library(sandwich)
+theme_set(theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()))
+set.seed(123)
+```
+
+```{r step-0 data process, include=FALSE}
+data_shay  <- read_sav("../../data/raw/2018-2019_Lifestyle_of_Young_Adults_Survey.sav")
+data_shay_pre1 <- data_shay %>% clean_names() %>% filter(included == 1)
+
+data_shay_pre2 <- data_shay_pre1 %>%
+  rename(ethnicity_cat = ethnicity_cat_top6) %>%
+  select(age_c, gender, ethnicity_cat, sample, unemployed, ses_c, bmi_c, condition, allergy, vegetarian, alcohol_daily_c, medmood, vitsup, regsmoke, sleep_quantity_c = sleeep_quantity_c, sleep_quality_c = sleeep_quality_c, raw_fv_c, activity_c, cooked_fv_c, fastfood_daily_c, sweets_daily_c, soda_daily_c, flourishing_c, cesd_c, educ) %>%
+  mutate_at(vars(gender, ethnicity_cat, unemployed, condition, allergy, vegetarian, medmood), ~ to_factor(.x)) %>%
+  mutate_at(vars(sample, regsmoke), ~ factor(.x)) %>%
+  mutate(ethnicity_cat = fct_other(ethnicity_cat, keep = c('Asian', 'Black', 'Hispanic', 'Caucasian')) %>%
+           relevel(., ref = 'Caucasian'))
+data_shay_pre2[,c("gender", "allergy", "vegetarian", "condition")] <- as.data.frame(lapply(data_shay_pre2[,c("gender", "allergy", "vegetarian", "condition")], function (x) gsub(" ", "",x)))
+#data_shay_pre2 <- as.data.frame(lapply(data_shay_pre2, as.numeric))
+```
+
+```{r defined outcomes, predictors, and covariates }
+outcomes <- c("flourishing_c", "cesd_c")
+
+predictors <- c("sleep_quantity_c", "sleep_quality_c", "activity_c", "raw_fv_c", "cooked_fv_c", "fastfood_daily_c", "sweets_daily_c", "soda_daily_c")
+
+covariates <- c("age_c", "gender", "ethnicity_cat", "sample", "unemployed", "ses_c", "bmi_c", "condition", "medmood", "vitsup", "allergy", "vegetarian", "alcohol_daily_c", "regsmoke")
+```
+
+## Remedy 1: sample splitting 
+
+1. The dataset is splitted into training (n = 800) and testing(n = 311) sets.
+
+```{r sample splitting 1, echo=T}
+full_df <- generate_full_model_dat(data_shay_pre2, base_var = covariates, add_var = predictors, outcomes = outcomes)
+split <- sample_splitting(full_df, 0.8)
+train <- split[[1]]
+test <- split[[2]]
+```
+
+2.  Step 2 was also repeated on the training set, slightly different quadratic terms were selected.
+
+```{r, sample splitting  2, echo=T}
+quad_selector <- selector_factory()
+kept_flo_2 <- quad_selector(train, base_var = covariates, add_var = predictors, outcome = outcomes[1], remove = outcomes[2])
+
+model_2_flo <- get_result(train, outcomes[1], kept_flo_2, outcomes[2])
+```
+
+Now we extract the set of selected variables from the above procedure and run the same model on the testing set which remained untouched in the selection process. We will focus on the quadratic terms since they were selected for. In the training set, $\text{soda_daily}^2$, $\text{raw_fruit_veggie}^2$, $\text{sleep_quality}^2$, $\text{activity}^2$ are significant at $\alpha = 0.05$. However in the testing set, only $\text{soda_daily}^2$ remained significant, with reduced significance and flipped sign.  
+
+```{r sample splitting 3, echo=T}
+model_2_flo_test <- get_result(test, outcomes[1], kept_flo_2, outcomes[2])
+```
+
+```{r sample splitting 4, results="asis"}
+library(stargazer)
+
+stargazer(model_2_flo, model_2_flo_test, type = "html", title = "Predicting Flourishing: sample splitting", column.labels = c("train", "test"), dep.var.labels = c("flourishing", "flourishing"))
+```
+
+```{r selection process in one block}
+dat <- data_shay_pre2
+full_dat <- generate_full_model_dat(data_shay_pre2, base_var = covariates, add_var = predictors, outcomes = outcomes, interaction = FALSE)
+
+res2<-rcorr(as.matrix(as.data.frame(lapply(full_dat, as.numeric))))
+corr_significant <- as.data.frame(res2[["P"]][covariates,c(predictors,outcomes)])
+
+covariates_kept <- corr_significant %>%
+  select_all() %>%
+  filter_all(any_vars(.<= 0.05 | is.na(.))) %>% rownames()
+
+fit <- lm(as.formula(paste0('cesd_c ~ - flourishing_c +', paste(covariates_kept, collapse = ' + '))), data=full_dat)
+
+covariates_kept_factorized <- names(fit$coefficients)[-1]
+
+model_1_flo <- get_result(full_dat, outcomes[1], covariates_kept_factorized, outcomes[2])
+model_1_dep <-get_result(full_dat, outcomes[2], covariates_kept_factorized, outcomes[1])
+
+#step two
+quad_selector <- selector_factory()
+kept_flo_2 <- quad_selector(full_dat, base_var = covariates_kept, add_var = predictors, outcome = outcomes[1], remove = outcomes[2])
+
+kept_dep_2 <- quad_selector(full_dat, base_var = covariates_kept, add_var = predictors, outcome = outcomes[2], remove = outcomes[1])
+
+model_2_flo <- get_result(full_dat, outcomes[1], kept_flo_2, outcomes[2])
+model_2_dep <-get_result(full_dat, outcomes[2], kept_dep_2, outcomes[1])
+```
+
+## PoSI Simultaneous Inference
+
+### PoSI package: 
+
+copying the model from before: 
+
+1. create a model matrix of just the covariates: 
+```{r PoSI 1}
+cols <- unique(colnames(full_dat))
+cols <- cols[!cols %in% c(outcomes, "(Intercept)")]
+full_X <- model.matrix(lm(generate_formula(outcomes[1], cols), data=full_dat))
+```
+
+2. Use the PoSI package, computation takes a long time:  
+```{r, eval=FALSE}
+library(PoSI)
+posi <- PoSI(full_X, modelSZ = 1:ncol(full_df), center = F, scale = F, verbose = 0,
+Nsim = 5, bundleSZ = 10, eps = 1e-08)
+posi_flo <- summary(posi, confidence = c(0.95, 0.99), alpha = NULL,
+df.err = NULL, eps.PoSI = 1e-06, digits = 3)
+```
+    K.PoSI K.Bonferroni K.Scheffe
+95%  3.978        6.659     6.334
+99%  4.414        6.892     6.853
+
+3. The remaining significant variables at $\alpha = 0.05$: Using the max-t simultaneous approach at $\alpha = 0.05$, the only significant variable in Model 2 (covariates, predictors, and the selected quadratic terms) is SES in predicting flourishing. None of the selected quadratic terms are still significant under simultaneous inference. 
+```{r, eval=FALSE}
+sig_flo <- abs(summary(model_2_flo)$coefficients[,c("t value")]) > posi_flo[1,1]
+names(sig_flo)[sig_flo]
+```
+
+### tmax package: 
+
+```{r}
+library(pracma)
+library(matrixStats)
+source('~/Documents/Documents - Hong’s MacBook Pro (2)/CMU/projects/selective-inference-in-practice/R/utilities.R')
+```
+
+```{r}
+#if (!require("tmax")) install.packages("tmax_1.0.tar.gz", repos=NULL, dependencies=T)
+require("tmax")
+cols <- unique(colnames(full_X))
+X <- full_X[,cols]
+X <- X[,2:ncol(X)]
+y <- full_dat$flourishing_c
+
+p_vals <- summary(model_2_flo)$coefficient[,4]
+
+M <- which(colnames(X) %in% names(which(p_vals < 0.05)))
+
+# PoSI
+posi_fit <- fixedx_posi(X, y, alpha = 0.05, Nboot = 10000)
+posi_ret <- posi(posi_fit, M)
+posi_ret
+```
+```{r}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(optparse, pracma, data.table, 
+               matrixStats, MASS, sandwich, jtools, dplyr,Rcpp)
+if (!require("tmax")) install.packages("/Users/honganni/Documents/Documents - Hong’s MacBook Pro (2)/CMU/projects/selective-inference-in-practice/HPOSI/tmax_1.0.tar.gz", repos=NULL, dependencies=T)
+
+source("/Users/honganni/Documents/Documents - Hong’s MacBook Pro (2)/CMU/projects/selective-inference-in-practice/HPOSI/utilities.r")
+
+# t_stats <- rep(0, ncol(X))
+# # Results
+# 
+# for(j in 1:ncol(X)){
+#   tmp <- lm(y ~ X[,c(j)])
+#   t_stats[j] <- abs(summary(tmp)$coeff[2,3]) #getting the t-stats
+# }
+
+Mhat <- M
+lmfit_Mhat <- lm(y ~ X[,Mhat])
+se <- vcovHC(lmfit_Mhat, "HC0")
+boot = 100
+##  usual CI
+  ci_lmfit_Mhat <- summ(lmfit_Mhat, confint = T)$coeftable
+  ci_mat <- ci_lmfit_Mhat[, 2:3]
+  
+  ## maxt
+  Hm <- matrix(NA, nrow = ncol(X), ncol = boot)
+  ## maxt rank
+  Hs <- matrix(NA, nrow = ncol(X), ncol = boot)
+  
+  ks <- 1:ncol(X)
+  for(i in seq_along(ks)) {
+    k <- ks[i]
+    
+    # get the bootstrap sample
+    tmp <- max_t_mul_boot_k(X, y, k,
+                            sandwich = T, return_sample = T,
+                            Nboot = boot, intercept = T)
+    
+    Hs[i, ] <- colMax(tmp$BootSample)
+    Hm[i, ] <- colMax(tmp$BootRank)
+  }
+  
+K <- get_T(Hm = Hs)
+K_norm <- get_T(X, Y, Mhat, NULL, Hm, maxk = ncol(X), Nboot = boot, intercept = T, adjust = T)
+
+
+ci_maxt <- lmfit_Mhat$coef[2] - c(K, -K) * sqrt(se[2,2])
+ci_maxt_norm <- lmfit_Mhat$coef[2] - c(K_norm, -K_norm) * sqrt(se[2,2])
+  
+```
+
+
+## Conditional Selective Inference
+```{r}
+require(selectiveInference)
+cols <- unique(colnames(full_X))
+X <- full_X[,cols]
+y <- full_dat$flourishing_c
+
+X <- X[,colnames(X) != "(Intercept)"]
+fs_fit <- fs(X,y)
+plot(fs_fit)
+output <- fsInf(fs_fit, alpha=0.05)
+res <- data.frame("vars" = colnames(X)[output$vars], "p-var" = round(output$pv, 3))
+
+res[res$p.var <= 0.05,]
+```
+
+The current implementation of the stepwise regression does not allow for keeping some of the variables which is how the author of the paper have done it. Should use "groupfs" instead to deal with categorical variables (variables with more than two levels will be grouped together so they either all get selected or none of them do). The significant results agree somewhat with the results from sample splitting. the PoSI framework seems to be too strict compared to other methods. 
+
