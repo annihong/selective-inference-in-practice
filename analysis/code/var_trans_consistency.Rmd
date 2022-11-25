@@ -22,14 +22,24 @@ generate_data <- function(n, power_f){
 
 select_power <- function(data){
   powers <- c(1,0)
+<<<<<<< HEAD
   fit1 <- lm(data$y ~ -1 + data$X[,1] + boxcox_transform((data$X[,2]),1))
   fit2 <- lm(data$y ~ -1 + data$X[,1] + boxcox_transform((data$X[,2]),0))
+=======
+  fit1 <- lm(data$y ~ data$X[,1] + data$X[,2])
+  fit2 <- lm(data$y ~ data$X[,1] + boxcox_transform((data$X[,2]),0))
+>>>>>>> b4ccba1d7aeb2dcbd4a16611a6fdcdf72656ce15
   models <- list(fit1,fit2)
   rss <- sapply(models, deviance)
   idx <- which.min(rss)
   power <- powers[idx]
+<<<<<<< HEAD
   alpha_hat <- models[[idx]]$coefficients[1]
   beta_hat <- models[[idx]]$coefficients[2]
+=======
+  alpha_hat <- models[[idx]]$coefficients[2]
+  beta_hat <- models[[idx]]$coefficients[3]
+>>>>>>> b4ccba1d7aeb2dcbd4a16611a6fdcdf72656ce15
   return(c(power, alpha_hat, beta_hat))
 }
 
@@ -52,9 +62,13 @@ power_f <- function(base) {
 }
 
 bases <- (11 + 0.3 * (0:20))/30
+<<<<<<< HEAD
 #bases <- seq(0.35, 0.45, 0.005)
 f_s <- lapply(bases, power_f)
 
+=======
+f_s <- lapply(bases, power_f)
+>>>>>>> b4ccba1d7aeb2dcbd4a16611a6fdcdf72656ce15
 probs_k <- function(k) {
   res <- lapply(f_s, var_consistency, n = 10^k, B=100)
   res <- sapply(res, function(dat) mean(dat[,1]))
@@ -83,6 +97,7 @@ ggplot(res, aes(x=bases)) +
 ```
 Distribution of $\hat{\alpha}$
 ```{r}
+<<<<<<< HEAD
 n = 10000
 B = 2000
 
@@ -124,6 +139,21 @@ raw$b_hat <- (raw$b_hat - 0.5) * sqrt(n)
     #labs(fill="", title = paste("distribution of alpha_hat,", p)) +
   theme(plot.title = element_text(hjust = 0.5), text = element_text(size=8)) + ylab('')
  print(p)
+=======
+n = 1000
+B = 100
+p_seq <- seq(0.35, 0.45, 0.01)
+for (p in p_seq) {
+  raw <- data.frame(var_consistency(power_f = function(x) p, n = n, B = B))
+raw$a_hat <- (raw$a_hat - 0.5) * sqrt(n)
+ plot_a <- raw %>% ggplot(aes(x=a_hat)) +
+     geom_histogram(aes(y=..density..), bins=60, alpha=0.8) + 
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    geom_density() +
+    labs(fill="", title = paste("distribution of alpha_hat,", p)) +
+  theme(plot.title = element_text(hjust = 0.5), text = element_text(size=8)) + ylab('')
+ 
+>>>>>>> b4ccba1d7aeb2dcbd4a16611a6fdcdf72656ce15
  print(plot_a)
 }
 
@@ -137,3 +167,7 @@ raw$b_hat <- (raw$b_hat - 0.5) * sqrt(n)
 ```
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> b4ccba1d7aeb2dcbd4a16611a6fdcdf72656ce15
